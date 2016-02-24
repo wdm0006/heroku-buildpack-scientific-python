@@ -6,7 +6,29 @@ puts-cmd "pip install -r requirements.txt"
 
 set +e
 # first install some libs
-apt-get install gcc git lapack-devel blas-devel atlas-devel gcc-c++ gcc-gfortran zlib-devel openssl-devel bzip2-devel
+VENDORED_GIT_NAME="npscipy-binaries"
+VENDORED_GIT_REPO="git://github.com/dbrgn/${VENDORED_GIT_NAME}.git"
+# The location of the pre-compiled atlas/lapack/blas/gfortran binaries.
+VENDORED_BINARIES="npscipy"
+
+puts-step "Noticed numpy/scipy. Bootstrapping prebuilt binaries."
+cd .heroku
+
+## check whether this has happened already
+## set BLAS/LAPACK/ATLAS
+if [ -d "vendor/lib/atlas-base" ]; then
+puts-step "Using cached binaries."
+else
+puts-step "Creating/downloading binaries."
+# Download and extract everything into target vendor directory.
+git clone ${VENDORED_GIT_REPO} > /dev/null
+tar -xvf ${VENDORED_GIT_NAME}/${VENDORED_BINARIES}.tar.gz > /dev/null
+fi
+export BLAS=$(pwd)/vendor/lib/atlas-base/atlas/libblas.a
+export LAPACK=$(pwd)/vendor/lib/atlas-base/atlas/liblapack.a
+export ATLAS=$(pwd)/vendor/lib/atlas-base/libatlas.a
+export LIBRARY_PATH=$(pwd)/vendor/lib:$(pwd)/vendor/lib/atlas-base:$(pwd)/vendor/lib/atlas-base/atlas
+export LD_LIBRARY_PATH=$(pwd)/vendor/lib:$(pwd)/vendor/lib/atlas-base:$(pwd)/vendor/lib/atlas-base/atlas
 
 # then manually install some libs
 /app/.heroku/python/bin/pip install -U --no-use-wheel numpy==1.9.2
