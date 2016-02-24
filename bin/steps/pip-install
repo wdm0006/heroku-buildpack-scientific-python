@@ -5,6 +5,18 @@ puts-cmd "pip install -r requirements.txt"
 [ "$FRESH_PYTHON" ] && bpwatch start pip_install_first
 
 set +e
+# first install some libs
+apt-get install gcc git lapack-devel blas-devel atlas-devel gcc-c++ gcc-gfortran zlib-devel openssl-devel bzip2-devel
+
+# then manually install some libs
+/app/.heroku/python/bin/pip install -U --no-use-wheel numpy==1.9.2
+/app/.heroku/python/bin/pip install -U --no-use-wheel scipy==0.15.1
+/app/.heroku/python/bin/pip install -U --no-use-wheel pandas==0.16.0
+/app/.heroku/python/bin/pip install -U --no-use-wheel sklearn==0.17.0
+/app/.heroku/python/bin/pip install -U --no-use-wheel statsmodels==0.6.0
+/app/.heroku/python/bin/pip install -U --no-use-wheel patsy>=0.4.0
+
+# then install whatever else is left
 /app/.heroku/python/bin/pip install -r requirements.txt --exists-action=w --src=./.heroku/src --disable-pip-version-check --no-cache-dir 2>&1 | tee $WARNINGS_LOG | cleanup | indent
 PIP_STATUS="${PIPESTATUS[0]}"
 set -e
